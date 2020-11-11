@@ -1,1 +1,5 @@
+# carpetas excluidas
 node_modules
+build
+
+# archivos excluidos
