@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 contract MyContract {
 
     // variables
-    address payable public admin;
+    address payable public sysadmin;
     // datos de los usuarios
     struct DatUsuario {
         string nombre;
@@ -12,12 +12,26 @@ contract MyContract {
     }
     // datos de las solicitudes
     struct DatSolicitud {
-        string id;
+        uint folio;
         string descripcion;
-        string estado;
+        DatEstado estado;
+        string unidad;
+        string programa;
+        string beneficiario;
+        string generada_por;
     }
+    // estados de las solicitudes
+    struct DatEstado{
+        string estado;
+        string nota;
+        string fecha;
+        bool correccion;
+        string n_usuario;
+    }
+    // posibles estados de las solicitudes
+    string[] public estados;
     //  Correspondencia identificador (address) del usuario
-    mapping(address => DatUsuario) public usuarios;
+    mapping(address => DatUsuario) public Usuarios;
     
     // constructor
 
