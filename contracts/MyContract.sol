@@ -33,8 +33,8 @@ contract MyContract {
     // posibles estados de las solicitudes
     string[] public estados;
     // arreglo de usuarios
-    DatUsuario[] usuarios;
-    // arreglo de usuarios
+    // DatUsuario[] usuarios;
+    // arreglo de solicitudes
     DatSolicitud[] solicitudes;
     //  Correspondencia identificador (address) del usuario
     mapping(address => DatUsuario) public Usuarios;
@@ -43,13 +43,25 @@ contract MyContract {
     constructor() public {
         sysadmin = msg.sender;
         estados = ["Solicitud generada", "Solicitud autorizada", "Solicitud cotizada", "Recibo de cotizaciones de proveedores", "Adjudicada a proveedor", "Orden de compra generada", "Recibo del producto y factura", "Pago efectuado", "Orden de compra finiquitada"];
-        usuarios.push(DatUsuario('Juan', 'SysAdmin'));
-        usuarios.push(DatUsuario('Pedro', 'Administrador de FCAyS'));
+        //usuarios.push(DatUsuario('Juan', 'SysAdmin'));
+        //usuarios.push(DatUsuario('Pedro', 'Administrador de FCAyS'));
     }
 
 // metodos
 
-    //registrar la direccion Ethereum (id) de los usuarios
+    //registrar los datos de los usuarios Administrativos y SysAdmin
+    function regId(address idusuario, string memory nombre, string memory cargo) public {
+        require(msg.sender == sysadmin);
+        Usuarios[idusuario] = DatUsuario(nombre, cargo); // Agregar usuario al mapping Usuarios
+    }
 
+    // ver susarios registrados
+    function verUsuarios(address idusuario) public view returns(string memory) {
+        require(msg.sender == sysadmin);
+        DatUsuario memory datusuario = Usuarios[idusuario];
+        string memory nombre = datusuario.nombre;
+        string memory cargo = datusuario.cargo;
+        return string(abi.encodePacked("Nombre: ",nombre," Cargo: ",cargo));
+    }
 
 }
