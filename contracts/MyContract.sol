@@ -42,6 +42,8 @@ contract MyContract {
 // eventos
     // usuario registrado
     event RegUsuario(address indexed idusuario, string nombre, string cargo);
+    // nueva solicitud generada
+    event RegSolicitud(string folio);
 
     
 // constructor
@@ -88,30 +90,47 @@ contract MyContract {
         DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", "fecha", false, Usuarios[msg.sender].nombre);
         DatSolicitud memory solic = DatSolicitud(folio, descripcion, datestado, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
         solicitudes.push(solic);
+
+        emit RegSolicitud(folio);
+    }
+
+    // buscar solicitudes registradas
+    function buscarSolicitud(string memory folio) public view returns (bool, uint) {
+        //DatSolicitud memory solic;
+        bool band;
+        uint posicion;
+        for (uint i=0; i < solicitudes.length; i++) {
+             if (keccak256(abi.encodePacked(solicitudes[i].folio)) == keccak256(abi.encodePacked(folio))) {
+                band = true;
+                posicion = i;
+                break;
+            }
+        }
+        return (band, posicion);
     }
 
     // ver solicitudes registradas
-     function verSolicitudes( string memory folio) public view returns(string memory) {
-         DatSolicitud memory solic;
-         bool band;
-         string memory mensaje;
-         for (uint i=0; i < solicitudes.length; i++) {
-             if (keccak256(abi.encodePacked(solicitudes[i].folio)) == keccak256(abi.encodePacked(folio))) {
-                 solic = solicitudes[i];
-                 band = true;
-                 break;
-             }
-         }
-         if (band == true)
-         {
-             mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Estado: ", solic.estado.estado, " Unidad: ", solic.unidad,
-         " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por));
-         }
-         else {
-             mensaje = "El folio ingresado no coindide con ninguna solicitud registrada";
-         }
-         return mensaje;
-     }
+    function verSolicitudes( string memory folio) public view returns(string memory) {
+        require(compUsuario(msg.sender) == true);
+        string memory mensaje;
+        (bool band, uint posicion) = buscarSolicitud(folio);
+
+        if ( band == true)
+        {
+            DatSolicitud memory solic = solicitudes[posicion];
+            mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Estado: ", solic.estado.estado, " Unidad: ", solic.unidad,
+            " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por));
+            band = false;
+        }
+        else {
+            mensaje = "El folio ingresado no coindide con ninguna solicitud registrada";
+        }
+        return mensaje;
+    }
 
     // cambiar estado e informacion de solicitud de compra
-}
+    function cambiarEstSolicitud(string memory folio) public {
+        
+    }
+
+}   
