@@ -14,7 +14,7 @@ contract MyContract {
     }
     // datos de las solicitudes
     struct DatSolicitud {
-        uint folio;
+        string folio;
         string descripcion;
         DatEstado estado;
         string unidad;
@@ -83,12 +83,35 @@ contract MyContract {
     }
 
     // dar de alta solicitud de compra
-    function nuevaSolicitud(uint folio, string memory descripcion, string memory unidad, string memory programa, string memory beneficiario) public {
+    function nuevaSolicitud( string memory folio, string memory descripcion, string memory unidad, string memory programa, string memory beneficiario) public {
         require(compUsuario(msg.sender) == true);
         DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", "fecha", false, Usuarios[msg.sender].nombre);
         DatSolicitud memory solic = DatSolicitud(folio, descripcion, datestado, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
         solicitudes.push(solic);
     }
+
+    // ver solicitudes registradas
+     function verSolicitudes( string memory folio) public view returns(string memory) {
+         DatSolicitud memory solic;
+         bool band;
+         string memory mensaje;
+         for (uint i=0; i < solicitudes.length; i++) {
+             if (keccak256(abi.encodePacked(solicitudes[i].folio)) == keccak256(abi.encodePacked(folio))) {
+                 solic = solicitudes[i];
+                 band = true;
+                 break;
+             }
+         }
+         if (band == true)
+         {
+             mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Estado: ", solic.estado.estado, " Unidad: ", solic.unidad,
+         " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por));
+         }
+         else {
+             mensaje = "El folio ingresado no coindide con ninguna solicitud registrada";
+         }
+         return mensaje;
+     }
 
     // cambiar estado e informacion de solicitud de compra
 }
