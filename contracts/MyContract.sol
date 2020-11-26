@@ -35,7 +35,7 @@ contract MyContract {
     // arreglo de id de usuarios
     address[] ids;
     // arreglo de solicitudes
-    //DatSolicitud[] solicitudes;
+    DatSolicitud[] solicitudes;
     //  Correspondencia identificador (address) del usuario
     mapping(address => DatUsuario) public Usuarios;
 
@@ -83,9 +83,11 @@ contract MyContract {
     }
 
     // dar de alta solicitud de compra
-    function nuevaSolicitud() public view returns(string memory) {
+    function nuevaSolicitud(uint folio, string memory descripcion, string memory unidad, string memory programa, string memory beneficiario) public {
         require(compUsuario(msg.sender) == true);
-        return "Comprobacion correcta";
+        DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", "fecha", false, Usuarios[msg.sender].nombre);
+        DatSolicitud memory solic = DatSolicitud(folio, descripcion, datestado, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
+        solicitudes.push(solic);
     }
 
     // cambiar estado e informacion de solicitud de compra
