@@ -26,7 +26,7 @@ contract MyContract {
     struct DatEstado{
         string estado;
         string nota;
-        string fecha;
+        uint fecha;
         bool correccion;
         string nom_usuario;
     }
@@ -44,6 +44,8 @@ contract MyContract {
     event RegUsuario(address indexed idusuario, string nombre, string cargo);
     // nueva solicitud generada
     event RegSolicitud(string folio);
+    // solicitud actualizada
+    event ActSolicitud(string folio);
 
     
 // constructor
@@ -87,7 +89,7 @@ contract MyContract {
     // dar de alta solicitud de compra
     function nuevaSolicitud( string memory folio, string memory descripcion, string memory unidad, string memory programa, string memory beneficiario) public {
         require(compUsuario(msg.sender) == true);
-        DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", "fecha", false, Usuarios[msg.sender].nombre);
+        DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", now, false, Usuarios[msg.sender].nombre);
         DatSolicitud memory solic = DatSolicitud(folio, descripcion, datestado, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
         solicitudes.push(solic);
 
@@ -95,7 +97,7 @@ contract MyContract {
     }
 
     // buscar solicitudes registradas
-    function buscarSolicitud(string memory folio) public view returns (bool, uint) {
+    function buscarSolicitud(string memory folio) internal view returns (bool, uint) {
         //DatSolicitud memory solic;
         bool band;
         uint posicion;
@@ -118,8 +120,10 @@ contract MyContract {
         if ( band == true)
         {
             DatSolicitud memory solic = solicitudes[posicion];
-            mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Estado: ", solic.estado.estado, " Unidad: ", solic.unidad,
-            " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por));
+            mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Unidad: ", solic.unidad,
+            " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por, 
+            " Estado: ", solic.estado.estado, " Nota: ", solic.estado.nota, " Coreccion: ", solic.estado.correccion,
+            " Modificada por: ", solic.estado.nom_usuario));
             band = false;
         }
         else {
@@ -128,9 +132,21 @@ contract MyContract {
         return mensaje;
     }
 
-    // cambiar estado e informacion de solicitud de compra
-    function cambiarEstSolicitud(string memory folio) public {
-        
+    // actualizar informacion de solicitud de compra
+    function actualizarSolicitud(string memory folio, string memory estado, string memory nota, bool correccion) public {
+        require(compUsuario(msg.sender) == true);
+        (bool band, uint posicion) = buscarSolicitud(folio);
+        if (band == false) {
+            verSolicitudes(folio);
+        }
+        else {
+            DatEstado memory nuevoEstado = DatEstado(estado, nota, now, correccion, Usuarios[msg.sender].nombre);
+            solicitudes[posicion].estado = nuevoEstado;
+        }
     }
 
-}   
+    function verFecha() public view returns(uint fecha) {
+        return now;
+    }
+
+}
