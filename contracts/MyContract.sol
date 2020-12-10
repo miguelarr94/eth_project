@@ -16,7 +16,7 @@ contract MyContract {
     struct DatSolicitud {
         string folio;
         string descripcion;
-        DatEstado estado;
+        //DatEstado estado;
         string unidad;
         string programa;
         string beneficiario;
@@ -36,8 +36,12 @@ contract MyContract {
     address[] ids;
     // arreglo de solicitudes
     DatSolicitud[] solicitudes;
-    //  Correspondencia identificador (address) del usuario
+    // arreglo temp para datos de estados
+    DatEstado[] datosEstados;
+    // correspondencia identificador (address) del usuario
     mapping(address => DatUsuario) public Usuarios;
+    // correspondencia folio de solicitud con la info de sus estados
+    mapping(string => DatEstado[]) public FolioEstados;
 
 // eventos
     // usuario registrado
@@ -90,7 +94,10 @@ contract MyContract {
     function nuevaSolicitud( string memory folio, string memory descripcion, string memory unidad, string memory programa, string memory beneficiario) public {
         require(compUsuario(msg.sender) == true);
         DatEstado memory datestado = DatEstado(estados[0], "Nueva solicitud generada", now, false, Usuarios[msg.sender].nombre);
-        DatSolicitud memory solic = DatSolicitud(folio, descripcion, datestado, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
+        datosEstados.push(datestado);
+        FolioEstados[folio] = datosEstados;
+        delete datosEstados;
+        DatSolicitud memory solic = DatSolicitud(folio, descripcion, unidad, programa, beneficiario, Usuarios[msg.sender].nombre );
         solicitudes.push(solic);
 
         emit RegSolicitud(folio);
@@ -112,41 +119,44 @@ contract MyContract {
     }
 
     // ver solicitudes registradas
-    function verSolicitudes( string memory folio) public view returns(string memory) {
+    function verSolicitudes(string memory folio) public view returns(string memory, uint) {
         require(compUsuario(msg.sender) == true);
+        
+        uint cantestados;
         string memory mensaje;
         (bool band, uint posicion) = buscarSolicitud(folio);
 
         if ( band == true)
         {
             DatSolicitud memory solic = solicitudes[posicion];
-            mensaje = string(abi.encodePacked("Folio: ",solic.folio," Descripcion: ",solic.descripcion, " Unidad: ", solic.unidad,
-            " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por, 
-            " Estado: ", solic.estado.estado, " Nota: ", solic.estado.nota, " Coreccion: ", solic.estado.correccion,
-            " Modificada por: ", solic.estado.nom_usuario));
+            mensaje = string(abi.encodePacked("Folio: ", solic.folio," Descripcion: ",solic.descripcion, " Unidad: ", solic.unidad,
+            " Programa: ", solic.programa, " Beneficiario: ", solic.beneficiario, " Generada por: ", solic.generada_por));
+           
+            cantestados = FolioEstados[folio].length;
             band = false;
         }
         else {
             mensaje = "El folio ingresado no coindide con ninguna solicitud registrada";
         }
-        return mensaje;
+        return (mensaje, cantestados);
     }
 
     // actualizar informacion de solicitud de compra
     function actualizarSolicitud(string memory folio, string memory estado, string memory nota, bool correccion) public {
         require(compUsuario(msg.sender) == true);
-        (bool band, uint posicion) = buscarSolicitud(folio);
+        
+        (bool band, ) = buscarSolicitud(folio);
+        
         if (band == false) {
             verSolicitudes(folio);
         }
         else {
             DatEstado memory nuevoEstado = DatEstado(estado, nota, now, correccion, Usuarios[msg.sender].nombre);
-            solicitudes[posicion].estado = nuevoEstado;
+            datosEstados = FolioEstados[folio];
+            datosEstados.push(nuevoEstado);
+            FolioEstados[folio] = datosEstados;
+            delete datosEstados;
         }
-    }
-
-    function verFecha() public view returns(uint fecha) {
-        return now;
     }
 
 }
